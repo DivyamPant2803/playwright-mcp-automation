@@ -47,12 +47,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/playwright-mcp-automation.git"
+    "url": "https://github.com/DivyamPant2803/playwright-mcp-automation.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/playwright-mcp-automation/issues"
+    "url": "https://github.com/DivyamPant2803/playwright-mcp-automation/issues"
   },
-  "homepage": "https://github.com/yourusername/playwright-mcp-automation#readme",
+  "homepage": "https://github.com/DivyamPant2803/playwright-mcp-automation#readme",
   "peerDependencies": {
     "@playwright/test": "^1.40.0"
   },
