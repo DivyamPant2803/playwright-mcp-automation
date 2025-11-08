@@ -1,5 +1,5 @@
 {
-  "name": "@playwright-mcp/automation",
+  "name": "playwright-mcp-automation",
   "version": "1.0.0",
   "description": "Lightweight Playwright MCP automation - zero config, works with all AI IDEs",
   "type": "module",
@@ -43,7 +43,7 @@
     "browser-automation",
     "zero-config"
   ],
-  "author": "",
+  "author": "Divyam Pant",
   "license": "MIT",
   "repository": {
     "type": "git",
