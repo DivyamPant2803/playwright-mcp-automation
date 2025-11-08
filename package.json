@@ -1,0 +1,77 @@
+{
+  "name": "@playwright-mcp/automation",
+  "version": "1.0.0",
+  "description": "Lightweight Playwright MCP automation - zero config, works with all AI IDEs",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "bin": {
+    "playwright-mcp-init": "./bin/init.js",
+    "playwright-mcp-test": "./bin/test.js",
+    "playwright-mcp-generate": "./bin/generate.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "prompts/universal",
+    "mcp-server/dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npm run build:ts && npm run build:mcp && npm run build:cli",
+    "build:ts": "tsc && tsc --project tsconfig.mjs.json",
+    "build:mcp": "cd mcp-server && npm run build",
+    "build:cli": "node scripts/build-cli.js",
+    "prepublishOnly": "npm run build && npm run size-check",
+    "size-check": "node scripts/check-size.js"
+  },
+  "keywords": [
+    "playwright",
+    "mcp",
+    "automation",
+    "testing",
+    "e2e",
+    "api-testing",
+    "ai",
+    "cursor",
+    "copilot",
+    "jetbrains",
+    "codeium",
+    "test-automation",
+    "browser-automation",
+    "zero-config"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/playwright-mcp-automation.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/playwright-mcp-automation/issues"
+  },
+  "homepage": "https://github.com/yourusername/playwright-mcp-automation#readme",
+  "peerDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": false
+    },
+    "typescript": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.48.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  }
+}
