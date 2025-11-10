@@ -53,6 +53,88 @@ export interface ProjectConfig {
     ui?: string;
     e2e?: string;
   };
+  errorCapture?: ErrorCaptureConfig;
+}
+
+export interface ErrorCaptureConfig {
+  enabled?: boolean;
+  outputDir?: string;
+  formats?: ('markdown' | 'html' | 'json')[];
+}
+
+export interface ErrorDetails {
+  message: string;
+  stack?: string;
+  type?: string;
+  name?: string;
+}
+
+export interface NetworkLog {
+  url: string;
+  method: string;
+  status?: number;
+  statusText?: string;
+  requestHeaders?: Record<string, string>;
+  responseHeaders?: Record<string, string>;
+  requestBody?: any;
+  responseBody?: any;
+  timestamp: number;
+  duration?: number;
+}
+
+export interface ConsoleLog {
+  type: 'log' | 'error' | 'warning' | 'info' | 'debug';
+  message: string;
+  args?: any[];
+  timestamp: number;
+  location?: {
+    url?: string;
+    line?: number;
+    column?: number;
+  };
+}
+
+export interface DOMState {
+  url: string;
+  title?: string;
+  html?: string;
+  visibleElements?: Array<{
+    selector: string;
+    text?: string;
+    visible: boolean;
+  }>;
+  screenshot?: string;
+}
+
+export interface ErrorReport {
+  testInfo: {
+    name: string;
+    type: 'api' | 'ui' | 'e2e';
+    description?: string;
+    timestamp: number;
+    duration?: number;
+  };
+  error: ErrorDetails;
+  networkLogs?: NetworkLog[];
+  consoleLogs?: ConsoleLog[];
+  domState?: DOMState;
+  environment: {
+    browser?: string;
+    os?: string;
+    testEnv?: string;
+    apiUrl?: string;
+    uiUrl?: string;
+  };
+  testSteps?: Array<{
+    step: number;
+    description: string;
+    tool?: string;
+    timestamp: number;
+  }>;
+  media?: {
+    screenshots?: string[];
+    videos?: string[];
+  };
 }
 
 
