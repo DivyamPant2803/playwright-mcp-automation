@@ -13,6 +13,17 @@ SECURITY_FIXES_APPLIED.md
 QUICK_START.md
 test-all.sh
 
+# Documentation and helper files (not for public repo)
+LOCAL_TESTING.md
+MAKE_PRIVATE.md
+PUBLISHING.md
+PUBLISH_NOW.md
+PUSH_TO_GITHUB.md
+QUICK_TEST.md
+README_GITHUB_SETUP.md
+README_PUBLISHING.md
+push-to-github.sh
+
 
 
 
