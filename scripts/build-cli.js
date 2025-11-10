@@ -26,14 +26,22 @@ import('../dist/cli/${cliFile}.js').catch(err => {
 
   writeFileSync(binPath, wrapper, 'utf-8');
   
-  // Make executable (Unix-like systems)
+  // Make executable (Unix-like systems) - use fs.chmodSync instead of execSync for security
   try {
-    const { execSync } = await import('child_process');
-    execSync(`chmod +x "${binPath}"`, { cwd: packageRoot });
-  } catch {
-    // Ignore chmod errors on Windows
+    const { chmodSync } = await import('fs');
+    chmodSync(binPath, 0o755); // rwxr-xr-x
+  } catch (error) {
+    // Ignore chmod errors on Windows or if permission denied
+    if (process.platform !== 'win32') {
+      console.warn(`Could not set executable permissions for ${cliFile}.js:`, error.message);
+    }
   }
 }
 
 console.log('✅ CLI binaries built');
+
+
+
+
+
 

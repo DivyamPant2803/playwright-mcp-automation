@@ -82,3 +82,8 @@ Using @playwright-mcp/automation E2E prompt:
 - Validate: Data consistency between UI and API at each step
 ```
 
+
+
+
+
+

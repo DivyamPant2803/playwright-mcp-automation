@@ -1,5 +1,6 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
+import { validateSelector, validateTimeout, validateFillValue } from '../utils/input-validator.js';
 
 export const fillTool: PlaywrightTool = {
   name: 'playwright_fill',
@@ -24,7 +25,11 @@ export const fillTool: PlaywrightTool = {
     required: ['selector', 'value'],
   },
   handler: async (args: any, manager: PlaywrightManager) => {
-    const { selector, value, timeout = 30000 } = args;
+    // Validate inputs
+    const selector = validateSelector(args.selector);
+    const value = validateFillValue(args.value);
+    const timeout = validateTimeout(args.timeout ?? 30000);
+    
     const page = await manager.getPage();
     
     let element;

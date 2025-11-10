@@ -6,3 +6,15 @@ dist/
 .env.local
 *.tsbuildinfo
 
+# Security and testing files (not for public repo)
+SECURITY_FIXES.md
+SECURITY_ANALYSIS.md
+SECURITY_FIXES_APPLIED.md
+QUICK_START.md
+test-all.sh
+
+
+
+
+
+

@@ -1,5 +1,6 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
+import { validateSelector, validateTimeout } from '../utils/input-validator.js';
 
 export const clickTool: PlaywrightTool = {
   name: 'playwright_click',
@@ -20,7 +21,10 @@ export const clickTool: PlaywrightTool = {
     required: ['selector'],
   },
   handler: async (args: any, manager: PlaywrightManager) => {
-    const { selector, timeout = 30000 } = args;
+    // Validate inputs
+    const selector = validateSelector(args.selector);
+    const timeout = validateTimeout(args.timeout ?? 30000);
+    
     const page = await manager.getPage();
     
     // Try different selector strategies

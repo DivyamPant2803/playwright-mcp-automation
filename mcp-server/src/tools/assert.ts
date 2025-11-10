@@ -1,5 +1,6 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
+import { validateSelector, validateTimeout } from '../utils/input-validator.js';
 
 export const assertTool: PlaywrightTool = {
   name: 'playwright_assert',
@@ -37,7 +38,13 @@ export const assertTool: PlaywrightTool = {
     required: ['type'],
   },
   handler: async (args: any, manager: PlaywrightManager) => {
-    const { type, selector, expectedText, expectedUrl, expectedCount, timeout = 5000 } = args;
+    // Validate inputs
+    const type = args.type;
+    const selector = args.selector ? validateSelector(args.selector) : undefined;
+    const expectedText = args.expectedText;
+    const expectedUrl = args.expectedUrl;
+    const expectedCount = args.expectedCount;
+    const timeout = validateTimeout(args.timeout ?? 5000);
     const page = await manager.getPage();
     
     try {

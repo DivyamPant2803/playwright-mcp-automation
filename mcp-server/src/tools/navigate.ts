@@ -1,5 +1,6 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
+import { validateNavigationUrl } from '../utils/url-validator.js';
 
 export const navigateTool: PlaywrightTool = {
   name: 'playwright_navigate',
@@ -22,13 +23,32 @@ export const navigateTool: PlaywrightTool = {
   },
   handler: async (args: any, manager: PlaywrightManager) => {
     const { url, waitUntil = 'load' } = args;
+    
+    // Validate URL to prevent navigation to malicious or internal URLs
+    const allowedDomains = process.env.ALLOWED_UI_DOMAINS?.split(',').filter(Boolean);
+    let validatedUrl: URL;
+    
+    try {
+      validatedUrl = validateNavigationUrl(url, allowedDomains);
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `URL validation failed: ${error.message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+    
     const page = await manager.getPage();
-    await page.goto(url, { waitUntil: waitUntil as any });
+    await page.goto(validatedUrl.toString(), { waitUntil: waitUntil as any });
     return {
       content: [
         {
           type: 'text',
-          text: `Navigated to ${url}`,
+          text: `Navigated to ${validatedUrl.toString()}`,
         },
       ],
     };

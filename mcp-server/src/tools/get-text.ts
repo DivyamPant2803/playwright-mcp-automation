@@ -1,5 +1,6 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
+import { validateSelector } from '../utils/input-validator.js';
 
 export const getTextTool: PlaywrightTool = {
   name: 'playwright_get_text',
@@ -19,7 +20,9 @@ export const getTextTool: PlaywrightTool = {
     },
   },
   handler: async (args: any, manager: PlaywrightManager) => {
-    const { selector, all = false } = args;
+    // Validate selector if provided
+    const selector = args.selector ? validateSelector(args.selector) : undefined;
+    const all = args.all ?? false;
     const page = await manager.getPage();
     
     if (!selector) {

@@ -5,7 +5,7 @@
  * Run tests with various options
  */
 
-import { execSync } from 'child_process';
+import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -20,29 +20,65 @@ async function runTests() {
   }
 
   try {
-    // Parse arguments
+    // Parse arguments safely
     const testType = args.find(arg => ['api', 'ui', 'e2e'].includes(arg));
-    const otherArgs = args.filter(arg => !['api', 'ui', 'e2e'].includes(arg));
-
-    let command = 'npx playwright test';
+    
+    // Whitelist of allowed Playwright arguments
+    const allowedArgs = [
+      '--grep', '--timeout', '--workers', '--headed', '--ui',
+      '--debug', '--reporter', '--output-dir', '--retries', '--max-failures',
+      '--list', '--project', '--grep-invert', '--global-timeout', '--forbid-only',
+      '--fully-parallel', '--shard', '--update-snapshots', '--config'
+    ];
+    
+    // Build safe argument array
+    const safeArgs: string[] = ['test'];
     
     if (testType) {
-      command += ` --project=${testType}`;
+      safeArgs.push('--project', testType);
+    }
+    
+    // Filter and validate other arguments
+    const otherArgs = args.filter(arg => !['api', 'ui', 'e2e'].includes(arg));
+    for (const arg of otherArgs) {
+      const argName = arg.split('=')[0];
+      if (allowedArgs.includes(argName)) {
+        if (arg.includes('=')) {
+          const [key, value] = arg.split('=', 2);
+          safeArgs.push(key, value);
+        } else {
+          safeArgs.push(argName);
+        }
+      }
     }
 
-    if (otherArgs.length > 0) {
-      command += ` ${otherArgs.join(' ')}`;
-    }
+    console.log(`🧪 Running tests: npx playwright ${safeArgs.join(' ')}\n`);
+    
+    // Use spawn instead of execSync for safety (prevents command injection)
+    const child = spawn('npx', ['playwright', ...safeArgs], {
+      stdio: 'inherit',
+      cwd: projectRoot,
+      shell: false, // Important: don't use shell to prevent injection
+    });
 
-    console.log(`🧪 Running tests: ${command}\n`);
-    execSync(command, { stdio: 'inherit', cwd: projectRoot });
+    child.on('error', (error) => {
+      console.error('❌ Error running tests:', error.message);
+      process.exit(1);
+    });
+
+    child.on('exit', (code) => {
+      process.exit(code || 0);
+    });
   } catch (error: any) {
-    if (error.status !== 0) {
-      process.exit(error.status || 1);
-    }
-    throw error;
+    console.error('❌ Error:', error.message);
+    process.exit(1);
   }
 }
 
 runTests().catch(console.error);
+
+
+
+
+
 

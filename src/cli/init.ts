@@ -8,10 +8,11 @@
 import { ConfigManager } from '../config/config-manager.js';
 import { ProjectDetector } from '../detectors/project-detector.js';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
+import { validateDirectoryPath } from '../utils/path-validator.js';
 
 async function init() {
-  const projectRoot = process.cwd();
+  const projectRoot = resolve(process.cwd());
   const configManager = new ConfigManager(projectRoot);
   const detector = new ProjectDetector(projectRoot);
 
@@ -48,9 +49,15 @@ async function init() {
 
     console.log('\n📁 Creating test directories...');
     for (const dir of testDirs) {
-      if (!existsSync(dir)) {
-        mkdirSync(dir, { recursive: true });
-        console.log(`   ✓ Created ${dir}`);
+      try {
+        // Validate path to prevent path traversal attacks
+        const safeDir = validateDirectoryPath(dir, projectRoot);
+        if (!existsSync(safeDir)) {
+          mkdirSync(safeDir, { recursive: true });
+          console.log(`   ✓ Created ${dir}`);
+        }
+      } catch (error: any) {
+        console.error(`   ✗ Invalid path: ${dir} - ${error.message}`);
       }
     }
 

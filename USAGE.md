@@ -329,3 +329,8 @@ const server = await loadMCPServer();
 - 🐛 [Report Issues](https://github.com/yourusername/playwright-mcp-automation/issues)
 - 💬 [Discussions](https://github.com/yourusername/playwright-mcp-automation/discussions)
 
+
+
+
+
+

@@ -1,4 +1,5 @@
 import { ApiRequestTool } from '../types.js';
+import { validateUrl } from '../utils/url-validator.js';
 
 export const apiRequestTool: ApiRequestTool = {
   name: 'playwright_api_request',
@@ -30,6 +31,25 @@ export const apiRequestTool: ApiRequestTool = {
   handler: async (args: any) => {
     const { method = 'GET', url, headers = {}, body } = args;
     
+    // Validate URL to prevent SSRF attacks
+    const allowedHosts = process.env.ALLOWED_API_HOSTS?.split(',').filter(Boolean);
+    const allowLocalhost = process.env.ALLOW_LOCALHOST === 'true';
+    let validatedUrl: URL;
+    
+    try {
+      validatedUrl = validateUrl(url, allowedHosts, allowLocalhost);
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `URL validation failed: ${error.message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+    
     const fetchOptions: RequestInit = {
       method,
       headers: {
@@ -43,7 +63,7 @@ export const apiRequestTool: ApiRequestTool = {
     }
     
     try {
-      const response = await fetch(url, fetchOptions);
+      const response = await fetch(validatedUrl.toString(), fetchOptions);
       const responseText = await response.text();
       let responseData;
       try {

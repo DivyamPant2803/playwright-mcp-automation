@@ -22,3 +22,8 @@ All notable changes to this project will be documented in this file.
 - Smart defaults for all configurations
 - Optional config file support
 
+
+
+
+
+

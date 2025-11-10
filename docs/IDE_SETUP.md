@@ -137,3 +137,8 @@ Simply reference the prompts in your AI assistant - they work universally.
 - Just reference: "Using @playwright-mcp/automation prompts..."
 - The AI will use the prompt structure to generate tests
 
+
+
+
+
+

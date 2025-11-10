@@ -4,7 +4,8 @@
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, relative, dirname, resolve } from 'path';
+import { validatePath } from './path-validator.js';
 
 export type IDE = 'cursor' | 'vscode' | 'jetbrains' | 'codeium' | 'unknown';
 
@@ -67,8 +68,9 @@ export class IDEDetector {
    * Generate IDE-specific MCP configuration
    */
   static generateConfig(ide: IDE, mcpServerPath: string): string | null {
-    const cwd = process.cwd();
-    const relativePath = mcpServerPath.replace(cwd + '/', './');
+    const cwd = resolve(process.cwd());
+    // Use proper path resolution instead of string replacement
+    const relativePath = relative(cwd, resolve(mcpServerPath));
 
     switch (ide) {
       case 'cursor':
@@ -119,20 +121,30 @@ export class IDEDetector {
    * Write IDE configuration file
    */
   static async writeConfig(ide: IDE, configPath: string, content: string): Promise<void> {
-    // Ensure directory exists
-    const dir = configPath.substring(0, configPath.lastIndexOf('/'));
+    const cwd = resolve(process.cwd());
+    
+    // Validate config path to prevent path traversal
+    let safeConfigPath: string;
+    try {
+      safeConfigPath = validatePath(configPath, cwd);
+    } catch (error: any) {
+      throw new Error(`Invalid config path: ${error.message}`);
+    }
+    
+    // Use proper path resolution instead of string manipulation
+    const dir = dirname(safeConfigPath);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
 
     // For VS Code, merge with existing settings.json
     if (ide === 'vscode' || ide === 'codeium') {
-      if (existsSync(configPath)) {
+      if (existsSync(safeConfigPath)) {
         try {
-          const existing = JSON.parse(readFileSync(configPath, 'utf-8'));
+          const existing = JSON.parse(readFileSync(safeConfigPath, 'utf-8'));
           const newConfig = JSON.parse(content);
           const merged = { ...existing, ...newConfig };
-          writeFileSync(configPath, JSON.stringify(merged, null, 2), 'utf-8');
+          writeFileSync(safeConfigPath, JSON.stringify(merged, null, 2), 'utf-8');
           return;
         } catch {
           // If merge fails, write new file
@@ -140,7 +152,12 @@ export class IDEDetector {
       }
     }
 
-    writeFileSync(configPath, content, 'utf-8');
+    writeFileSync(safeConfigPath, content, 'utf-8');
   }
 }
+
+
+
+
+
 
