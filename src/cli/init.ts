@@ -7,7 +7,7 @@
 
 import { ConfigManager } from '../config/config-manager.js';
 import { ProjectDetector } from '../detectors/project-detector.js';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { validateDirectoryPath } from '../utils/path-validator.js';
 
@@ -61,13 +61,22 @@ async function init() {
       }
     }
 
-    // Generate Playwright config if it doesn't exist
+    // Generate or update Playwright config
     const playwrightConfigPath = join(projectRoot, 'playwright.config.ts');
     if (!existsSync(playwrightConfigPath)) {
       console.log('\n⚙️  Generating Playwright configuration...');
       const playwrightConfig = generatePlaywrightConfig(config);
       writeFileSync(playwrightConfigPath, playwrightConfig, 'utf-8');
       console.log(`   ✓ Created playwright.config.ts`);
+    } else {
+      // Update existing config to add error reporter if not present
+      console.log('\n⚙️  Updating Playwright configuration...');
+      const updated = updatePlaywrightConfig(playwrightConfigPath);
+      if (updated) {
+        console.log(`   ✓ Updated playwright.config.ts (added error reporter)`);
+      } else {
+        console.log(`   ✓ playwright.config.ts already has error reporter`);
+      }
     }
 
     // Generate IDE config if needed
@@ -108,6 +117,7 @@ export default defineConfig({
     ['html'],
     ['json', { outputFile: 'test-results/results.json' }],
     ['list'],
+    ['@playwright-mcp/automation/reporters/error-reporter'],
   ],
   use: {
     baseURL: UI_BASE_URL,
@@ -142,6 +152,87 @@ export default defineConfig({
   ],
 });
 `;
+}
+
+function updatePlaywrightConfig(configPath: string): boolean {
+  try {
+    const content = readFileSync(configPath, 'utf-8');
+    
+    // Check if error reporter is already present
+    if (content.includes('@playwright-mcp/automation/reporters/error-reporter')) {
+      return false; // Already present
+    }
+    
+    // Find the reporter array - look for "reporter:" followed by an array
+    const reporterIndex = content.indexOf('reporter:');
+    if (reporterIndex === -1) {
+      console.log('   ⚠️  Could not auto-update: no reporter property found in playwright.config.ts');
+      console.log('   💡 Please manually add: [\'@playwright-mcp/automation/reporters/error-reporter\'] to your reporter array');
+      return false;
+    }
+    
+    // Find the opening bracket after "reporter:"
+    const afterReporter = content.substring(reporterIndex);
+    const bracketStart = afterReporter.indexOf('[');
+    if (bracketStart === -1) {
+      console.log('   ⚠️  Could not auto-update: no reporter array found in playwright.config.ts');
+      console.log('   💡 Please manually add: [\'@playwright-mcp/automation/reporters/error-reporter\'] to your reporter array');
+      return false;
+    }
+    
+    // Find the matching closing bracket (handle nested brackets)
+    let bracketCount = 0;
+    let bracketEnd = bracketStart;
+    for (let i = bracketStart; i < afterReporter.length; i++) {
+      if (afterReporter[i] === '[') bracketCount++;
+      if (afterReporter[i] === ']') {
+        bracketCount--;
+        if (bracketCount === 0) {
+          bracketEnd = i;
+          break;
+        }
+      }
+    }
+    
+    if (bracketCount !== 0) {
+      console.log('   ⚠️  Could not auto-update: malformed reporter array in playwright.config.ts');
+      console.log('   💡 Please manually add: [\'@playwright-mcp/automation/reporters/error-reporter\'] to your reporter array');
+      return false;
+    }
+    
+    // Extract the array content
+    const arrayContent = afterReporter.substring(bracketStart + 1, bracketEnd);
+    const arrayStartPos = reporterIndex + bracketStart;
+    const arrayEndPos = reporterIndex + bracketEnd;
+    
+    // Determine indentation
+    const lines = arrayContent.split('\n');
+    const lastLine = lines[lines.length - 1] || '';
+    const indentMatch = lastLine.match(/^(\s*)/);
+    const indent = indentMatch ? indentMatch[1] : '    ';
+    
+    // Build the new reporter entry
+    const reporterEntry = `${indent}['@playwright-mcp/automation/reporters/error-reporter'],`;
+    
+    // Check if we need to add a comma
+    const needsComma = arrayContent.trim().length > 0 && !arrayContent.trim().endsWith(',');
+    
+    // Construct new content
+    const beforeArray = content.substring(0, arrayEndPos);
+    const afterArray = content.substring(arrayEndPos);
+    const newArrayContent = arrayContent + 
+      (needsComma ? ',' : '') + '\n' +
+      reporterEntry;
+    
+    const newContent = content.substring(0, arrayStartPos + 1) + newArrayContent + afterArray;
+    
+    writeFileSync(configPath, newContent, 'utf-8');
+    return true;
+  } catch (error: any) {
+    console.log(`   ⚠️  Could not auto-update playwright.config.ts: ${error.message}`);
+    console.log('   💡 Please manually add: [\'@playwright-mcp/automation/reporters/error-reporter\'] to your reporter array');
+    return false;
+  }
 }
 
 

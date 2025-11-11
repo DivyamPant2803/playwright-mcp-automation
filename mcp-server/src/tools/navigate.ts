@@ -42,6 +42,7 @@ export const navigateTool: PlaywrightTool = {
       };
     }
     
+    try {
     const page = await manager.getPage();
     await page.goto(validatedUrl.toString(), { waitUntil: waitUntil as any });
     return {
@@ -52,6 +53,29 @@ export const navigateTool: PlaywrightTool = {
         },
       ],
     };
+    } catch (error: any) {
+      const errorDetails = {
+        message: error.message,
+        stack: error.stack,
+        type: error.name || 'Error',
+        url: validatedUrl.toString(),
+        waitUntil,
+        timestamp: new Date().toISOString(),
+      };
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: `Navigation failed: ${error.message}`,
+              details: errorDetails,
+            }, null, 2),
+          },
+        ],
+        isError: true,
+      };
+    }
   },
 };
 

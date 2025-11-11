@@ -81,6 +81,11 @@ export class ConfigManager {
         ui: './tests/ui',
         e2e: './tests/e2e',
       },
+      errorCapture: {
+        enabled: true,
+        outputDir: './test-results/error-reports',
+        formats: ['markdown', 'html', 'json'],
+      },
     };
 
     return this.config;

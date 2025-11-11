@@ -135,11 +135,36 @@ export const assertTool: PlaywrightTool = {
           throw new Error(`Unknown assertion type: ${type}`);
       }
     } catch (error: any) {
+      const page = await manager.getPage().catch(() => null);
+      const errorDetails: any = {
+        message: error.message,
+        stack: error.stack,
+        type: error.name || 'Error',
+        assertionType: args.type,
+        selector: args.selector,
+        expectedText: args.expectedText,
+        expectedUrl: args.expectedUrl,
+        expectedCount: args.expectedCount,
+        timestamp: new Date().toISOString(),
+      };
+      
+      if (page) {
+        try {
+          errorDetails.pageUrl = page.url();
+          errorDetails.pageTitle = await page.title().catch(() => 'unknown');
+        } catch {
+          // Ignore errors capturing page state
+        }
+      }
+      
       return {
         content: [
           {
             type: 'text',
-            text: `Assertion failed: ${error.message}`,
+            text: JSON.stringify({
+              error: `Assertion failed: ${error.message}`,
+              details: errorDetails,
+            }, null, 2),
           },
         ],
         isError: true,

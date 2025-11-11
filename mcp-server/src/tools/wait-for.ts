@@ -30,6 +30,7 @@ export const waitForTool: PlaywrightTool = {
     },
   },
   handler: async (args: any, manager: PlaywrightManager) => {
+    try {
     // Validate inputs
     const timeout = validateTimeout(args.timeout ?? 30000);
     const selector = args.selector ? validateSelector(args.selector) : undefined;
@@ -64,6 +65,41 @@ export const waitForTool: PlaywrightTool = {
           {
             type: 'text',
             text: 'Please provide either a selector or URL to wait for',
+            },
+          ],
+          isError: true,
+        };
+      }
+    } catch (error: any) {
+      const page = await manager.getPage().catch(() => null);
+      const errorDetails: any = {
+        message: error.message,
+        stack: error.stack,
+        type: error.name || 'Error',
+        selector: args.selector,
+        url: args.url,
+        state: args.state,
+        timeout: args.timeout,
+        timestamp: new Date().toISOString(),
+      };
+      
+      if (page) {
+        try {
+          errorDetails.pageUrl = page.url();
+          errorDetails.pageTitle = await page.title().catch(() => 'unknown');
+        } catch {
+          // Ignore errors capturing page state
+        }
+      }
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: `Wait operation failed: ${error.message}`,
+              details: errorDetails,
+            }, null, 2),
           },
         ],
         isError: true,

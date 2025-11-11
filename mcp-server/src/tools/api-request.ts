@@ -86,11 +86,23 @@ export const apiRequestTool: ApiRequestTool = {
         ],
       };
     } catch (error: any) {
+      const errorDetails = {
+        message: error.message,
+        stack: error.stack,
+        type: error.name || 'Error',
+        url: validatedUrl.toString(),
+        method,
+        timestamp: new Date().toISOString(),
+      };
+      
       return {
         content: [
           {
             type: 'text',
-            text: `API request failed: ${error.message}`,
+            text: JSON.stringify({
+              error: `API request failed: ${error.message}`,
+              details: errorDetails,
+            }, null, 2),
           },
         ],
         isError: true,

@@ -10,13 +10,15 @@
   "bin": {
     "playwright-mcp-init": "./bin/init.js",
     "playwright-mcp-test": "./bin/test.js",
-    "playwright-mcp-generate": "./bin/generate.js"
+    "playwright-mcp-generate": "./bin/generate.js",
+    "playwright-mcp-error-capture": "./bin/error-capture.js"
   },
   "files": [
     "dist",
     "bin",
     "prompts/universal",
     "mcp-server/dist",
+    "reporters",
     "README.md"
   ],
   "scripts": {

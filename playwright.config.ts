@@ -13,7 +13,8 @@ export default defineConfig({
     ['html'],
     ['json', { outputFile: 'test-results/results.json' }],
     ['list'],
-  ],
+  
+  ['@playwright-mcp/automation/reporters/error-reporter'],],
   use: {
     baseURL: UI_BASE_URL,
     trace: 'on-first-retry',

@@ -21,6 +21,7 @@ export const clickTool: PlaywrightTool = {
     required: ['selector'],
   },
   handler: async (args: any, manager: PlaywrightManager) => {
+    try {
     // Validate inputs
     const selector = validateSelector(args.selector);
     const timeout = validateTimeout(args.timeout ?? 30000);
@@ -44,6 +45,39 @@ export const clickTool: PlaywrightTool = {
         },
       ],
     };
+    } catch (error: any) {
+      const page = await manager.getPage().catch(() => null);
+      const errorDetails: any = {
+        message: error.message,
+        stack: error.stack,
+        type: error.name || 'Error',
+        selector: args.selector,
+        timestamp: new Date().toISOString(),
+      };
+      
+      // Try to capture page state if available
+      if (page) {
+        try {
+          errorDetails.pageUrl = page.url();
+          errorDetails.pageTitle = await page.title().catch(() => 'unknown');
+        } catch {
+          // Ignore errors capturing page state
+        }
+      }
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: `Failed to click element: ${error.message}`,
+              details: errorDetails,
+            }, null, 2),
+          },
+        ],
+        isError: true,
+      };
+    }
   },
 };
 

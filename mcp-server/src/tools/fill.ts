@@ -25,6 +25,7 @@ export const fillTool: PlaywrightTool = {
     required: ['selector', 'value'],
   },
   handler: async (args: any, manager: PlaywrightManager) => {
+    try {
     // Validate inputs
     const selector = validateSelector(args.selector);
     const value = validateFillValue(args.value);
@@ -48,6 +49,39 @@ export const fillTool: PlaywrightTool = {
         },
       ],
     };
+    } catch (error: any) {
+      const page = await manager.getPage().catch(() => null);
+      const errorDetails: any = {
+        message: error.message,
+        stack: error.stack,
+        type: error.name || 'Error',
+        selector: args.selector,
+        value: args.value,
+        timestamp: new Date().toISOString(),
+      };
+      
+      if (page) {
+        try {
+          errorDetails.pageUrl = page.url();
+          errorDetails.pageTitle = await page.title().catch(() => 'unknown');
+        } catch {
+          // Ignore errors capturing page state
+        }
+      }
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: `Failed to fill element: ${error.message}`,
+              details: errorDetails,
+            }, null, 2),
+          },
+        ],
+        isError: true,
+      };
+    }
   },
 };
 

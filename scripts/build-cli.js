@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 const packageRoot = join(__dirname, '..');
 
 // Build CLI binaries
-const cliFiles = ['init', 'test', 'generate'];
+const cliFiles = ['init', 'test', 'generate', 'error-capture'];
 
 for (const cliFile of cliFiles) {
   const binPath = join(packageRoot, 'bin', `${cliFile}.js`);

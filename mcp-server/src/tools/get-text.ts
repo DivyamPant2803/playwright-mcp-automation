@@ -20,6 +20,7 @@ export const getTextTool: PlaywrightTool = {
     },
   },
   handler: async (args: any, manager: PlaywrightManager) => {
+    try {
     // Validate selector if provided
     const selector = args.selector ? validateSelector(args.selector) : undefined;
     const all = args.all ?? false;
@@ -55,6 +56,38 @@ export const getTextTool: PlaywrightTool = {
         },
       ],
     };
+    } catch (error: any) {
+      const page = await manager.getPage().catch(() => null);
+      const errorDetails: any = {
+        message: error.message,
+        stack: error.stack,
+        type: error.name || 'Error',
+        selector: args.selector,
+        timestamp: new Date().toISOString(),
+      };
+      
+      if (page) {
+        try {
+          errorDetails.pageUrl = page.url();
+          errorDetails.pageTitle = await page.title().catch(() => 'unknown');
+        } catch {
+          // Ignore errors capturing page state
+        }
+      }
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: `Failed to get text: ${error.message}`,
+              details: errorDetails,
+            }, null, 2),
+          },
+        ],
+        isError: true,
+      };
+    }
   },
 };
 

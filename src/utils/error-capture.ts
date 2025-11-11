@@ -81,9 +81,16 @@ export class ErrorCapture {
             const isVisible = await element.isVisible().catch(() => false);
             if (isVisible) {
               const selector = await element.evaluate((el) => {
-                if (el.id) return `#${el.id}`;
-                if (el.className) return `.${el.className.split(' ')[0]}`;
-                return el.tagName.toLowerCase();
+                // Use type assertion to access DOM properties
+                const htmlEl = el as any;
+                if (htmlEl.id) return `#${htmlEl.id}`;
+                if (htmlEl.className && typeof htmlEl.className === 'string') {
+                  return `.${htmlEl.className.split(' ')[0]}`;
+                }
+                if (htmlEl.tagName) {
+                  return htmlEl.tagName.toLowerCase();
+                }
+                return 'unknown';
               }).catch(() => 'unknown');
               const text = await element.textContent().catch(() => undefined);
               visibleElements.push({
