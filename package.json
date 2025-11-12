@@ -1,6 +1,6 @@
 {
   "name": "playwright-mcp-automation",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lightweight Playwright MCP automation - zero config, works with all AI IDEs",
   "type": "module",
   "main": "dist/index.js",
