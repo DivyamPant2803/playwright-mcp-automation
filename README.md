@@ -42,16 +42,20 @@ That's it! The package will:
 
 Works identically in **all AI IDEs** (Cursor, VS Code + Copilot, JetBrains AI, Codeium, etc.):
 
+**Important:** These prompts follow a **two-phase approach**:
+1. **PHASE 1 - EXECUTION**: Execute tests immediately in the browser/API using MCP tools (runs tests in real-time)
+2. **PHASE 2 - GENERATION**: After execution, generate Playwright test files (.spec.ts) based on what was executed
+
 ```
-Using @playwright-mcp/automation prompts, generate API tests for /api/users
+Using @playwright-mcp/automation prompts, execute API tests for /api/users
 ```
 
 ```
-Using the UI test generation prompt from @playwright-mcp/automation, test the users page
+Using the UI test generation prompt from @playwright-mcp/automation, perform ui automation and execute tests for the users page
 ```
 
 ```
-Using the E2E test prompt from @playwright-mcp/automation, test the complete user registration flow
+Using the E2E test prompt from @playwright-mcp/automation, execute tests for the complete user registration flow
 ```
 
 ### Example: API Tests
@@ -66,11 +70,14 @@ Using @playwright-mcp/automation API prompt, generate tests for:
 ### Example: UI Tests
 
 ```
-Using @playwright-mcp/automation UI prompt, generate tests for:
+Using the UI test generation prompt from @playwright-mcp/automation, perform ui automation and execute tests for:
 - URL: http://localhost:5173/users
-- Test: Form submission, data display, navigation
-- Validate: Form validation, success messages, error states
+- Test scenarios: 
+  - Form submission, data display, navigation
+  - Form validation, success messages, error states
 ```
+
+**Note:** The AI will first execute the tests immediately in the browser using MCP tools, then generate test files based on the executed steps.
 
 ### Example: E2E Tests
 

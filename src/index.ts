@@ -13,6 +13,7 @@ export { envConfig } from './config/environment.js';
 export { ErrorCapture } from './utils/error-capture.js';
 export { ErrorConfig } from './config/error-config.js';
 export { ReportGenerator } from './utils/report-generator.js';
+export { TestFileGenerator } from './utils/test-file-generator.js';
 export { default as ErrorReporter } from './reporters/error-reporter.js';
 
 // Re-export types

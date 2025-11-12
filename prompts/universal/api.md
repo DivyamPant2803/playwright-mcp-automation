@@ -15,7 +15,11 @@ Using the API test generation prompt from @playwright-mcp/automation, generate t
 
 ## Prompt Template
 
-You are an expert test automation engineer. Generate comprehensive API tests for the following endpoint using the Playwright MCP server tools.
+You are an expert test automation engineer. **EXECUTE API tests immediately** for the following endpoint using the Playwright MCP server tools, and **THEN generate test files** based on what was executed.
+
+**IMPORTANT: Follow this two-phase approach:**
+1. **PHASE 1 - EXECUTION**: Execute the tests in real-time using MCP tools. Use the MCP tools to perform actual API requests.
+2. **PHASE 2 - GENERATION**: After execution is complete, generate Playwright test files (.spec.ts) based on the executed test steps and save them to the appropriate test directory.
 
 **Endpoint Information:**
 - Base URL: {API_BASE_URL}
@@ -39,14 +43,34 @@ You are an expert test automation engineer. Generate comprehensive API tests for
   - Parameters: method, url, headers, body
   - Returns: status, statusText, headers, data
 
-**Instructions:**
-1. Use the `playwright_api_request` tool to execute each test scenario
-2. Validate the response status codes
-3. Validate the response data structure
-4. Test error cases with invalid inputs
+**Execution Instructions (MUST FOLLOW):**
+1. **START NOW**: Use the `playwright_api_request` tool to execute each test scenario - CALL THE TOOL IMMEDIATELY
+2. **EXECUTE**: Validate the response status codes using the tool results
+3. **EXECUTE**: Validate the response data structure using the tool results
+4. **EXECUTE**: Test error cases with invalid inputs using the tool
 5. Document any assumptions or limitations
 
-Generate the test steps using the MCP tools and provide clear assertions for each scenario.
+**PHASE 1 - EXECUTION (Do this first):**
+- Execute each test scenario immediately using the MCP tools
+- Run the API requests now using the `playwright_api_request` tool
+- Document each executed step (tool name, parameters, results)
+
+**PHASE 2 - GENERATION (Do this after execution):**
+- After all tests are executed, generate a Playwright test file (.spec.ts)
+- Convert each executed MCP tool call into equivalent Playwright test code
+- Save the test file to the appropriate directory (typically `tests/api/`)
+- Use the following template structure:
+  ```typescript
+  import { test, expect } from '@playwright/test';
+  
+  test('Test Name', async ({ request }) => {
+    // Convert executed steps to Playwright code
+    const response = await request.get('/api/endpoint');
+    expect(response.ok()).toBeTruthy();
+    // etc.
+  });
+  ```
+- The generated test file should be executable and match the executed test flow
 
 ## Example Usage
 
