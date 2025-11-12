@@ -73,4 +73,40 @@ export function validateFillValue(value: string): string {
   return value;
 }
 
+/**
+ * Validate text input with size limits
+ * 
+ * @param value - The text input value
+ * @param maxLength - Maximum allowed length (default: 10000)
+ * @param fieldName - Name of the field for error messages
+ * @returns The validated value
+ * @throws Error if value is invalid
+ */
+export function validateTextInput(value: string, maxLength: number = 10000, fieldName: string = 'input'): string {
+  if (typeof value !== 'string') {
+    throw new Error(`${fieldName} must be a string`);
+  }
+  if (value.length > maxLength) {
+    throw new Error(`${fieldName} is too long (max ${maxLength} characters)`);
+  }
+  return value;
+}
+
+/**
+ * Validate URL pattern
+ * 
+ * @param pattern - The URL pattern to validate
+ * @returns The validated pattern
+ * @throws Error if pattern is invalid
+ */
+export function validateUrlPattern(pattern: string): string {
+  if (typeof pattern !== 'string') {
+    throw new Error('URL pattern must be a string');
+  }
+  if (pattern.length > 2000) {
+    throw new Error('URL pattern is too long (max 2000 characters)');
+  }
+  return pattern;
+}
+
 

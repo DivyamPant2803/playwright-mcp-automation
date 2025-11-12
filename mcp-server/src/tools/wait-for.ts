@@ -1,6 +1,8 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
 import { validateSelector, validateTimeout } from '../utils/input-validator.js';
+import { validateNavigationUrl } from '../utils/url-validator.js';
+import { getSafeErrorMessage } from '../utils/error-sanitizer.js';
 
 export const waitForTool: PlaywrightTool = {
   name: 'playwright_wait_for',
@@ -39,7 +41,39 @@ export const waitForTool: PlaywrightTool = {
     const page = await manager.getPage();
     
     if (url) {
-      await page.waitForURL(url, { timeout });
+      // Validate URL pattern
+      const allowedDomains = process.env.ALLOWED_UI_DOMAINS?.split(',').filter(Boolean);
+      
+      try {
+        // For URL patterns (not full URLs), we need to handle both cases
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          // Full URL - validate it
+          const validatedUrl = validateNavigationUrl(url, allowedDomains);
+          await page.waitForURL(validatedUrl.toString(), { timeout });
+        } else {
+          // For URL patterns (regex-like), validate the pattern is safe
+          // Only allow simple patterns, not complex regex
+          if (/[<>"']/.test(url)) {
+            throw new Error('Invalid URL pattern: contains unsafe characters');
+          }
+          // Additional validation: check for dangerous patterns
+          if (/javascript:|data:|file:|ftp:/i.test(url)) {
+            throw new Error('Invalid URL pattern: dangerous protocol detected');
+          }
+          await page.waitForURL(url, { timeout });
+        }
+      } catch (error: any) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `URL validation failed: ${error.message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+      
       return {
         content: [
           {
@@ -73,9 +107,8 @@ export const waitForTool: PlaywrightTool = {
     } catch (error: any) {
       const page = await manager.getPage().catch(() => null);
       const errorDetails: any = {
-        message: error.message,
-        stack: error.stack,
-        type: error.name || 'Error',
+        message: getSafeErrorMessage(error),
+        type: error?.name || 'Error',
         selector: args.selector,
         url: args.url,
         state: args.state,
@@ -97,7 +130,7 @@ export const waitForTool: PlaywrightTool = {
           {
             type: 'text',
             text: JSON.stringify({
-              error: `Wait operation failed: ${error.message}`,
+              error: `Wait operation failed: ${getSafeErrorMessage(error)}`,
               details: errorDetails,
             }, null, 2),
           },

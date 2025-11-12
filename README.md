@@ -179,6 +179,39 @@ The package automatically detects:
 - Playwright (peer dependency)
 - TypeScript (optional, peer dependency)
 
+## Security Considerations
+
+### MCP Server Security
+
+The Playwright MCP server is designed for **local use only**. It does not include authentication or authorization mechanisms.
+
+**Important Security Notes:**
+- ✅ The server should only run on localhost
+- ✅ Never expose the MCP server to the public internet
+- ✅ The server communicates via stdio, which is secure for local use
+- ⚠️ If you need network access, implement proper authentication
+
+### Environment Variables
+
+The following environment variables control security settings:
+
+- `ALLOWED_API_HOSTS`: Comma-separated list of allowed API hosts (prevents SSRF)
+- `ALLOWED_UI_DOMAINS`: Comma-separated list of allowed UI domains
+- `ALLOW_LOCALHOST`: Set to `true` to allow localhost connections (default: false)
+- `API_REQUEST_TIMEOUT`: Timeout for API requests in milliseconds (default: 30000)
+- `SCREENSHOT_OUTPUT_DIR`: Directory for screenshot output (default: `./test-results/screenshots`)
+- `NODE_ENV`: Set to `production` to enable production security settings
+
+### Security Features
+
+- ✅ Path traversal protection on all file operations
+- ✅ SSRF protection with URL validation
+- ✅ HTTP header injection prevention
+- ✅ Input validation and sanitization
+- ✅ Error message sanitization (no stack traces in production)
+- ✅ Request timeouts to prevent DoS
+- ✅ Content-Type validation on API responses
+
 ## License
 
 MIT

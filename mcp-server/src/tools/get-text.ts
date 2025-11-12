@@ -1,6 +1,7 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
 import { validateSelector } from '../utils/input-validator.js';
+import { getSafeErrorMessage } from '../utils/error-sanitizer.js';
 
 export const getTextTool: PlaywrightTool = {
   name: 'playwright_get_text',
@@ -59,9 +60,8 @@ export const getTextTool: PlaywrightTool = {
     } catch (error: any) {
       const page = await manager.getPage().catch(() => null);
       const errorDetails: any = {
-        message: error.message,
-        stack: error.stack,
-        type: error.name || 'Error',
+        message: getSafeErrorMessage(error),
+        type: error?.name || 'Error',
         selector: args.selector,
         timestamp: new Date().toISOString(),
       };
@@ -80,7 +80,7 @@ export const getTextTool: PlaywrightTool = {
           {
             type: 'text',
             text: JSON.stringify({
-              error: `Failed to get text: ${error.message}`,
+              error: `Failed to get text: ${getSafeErrorMessage(error)}`,
               details: errorDetails,
             }, null, 2),
           },

@@ -6,6 +6,7 @@
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname, relative, resolve } from 'path';
 import type { ErrorReport } from '../types.js';
+import { validatePath } from './path-validator.js';
 
 export class ReportGenerator {
   /**
@@ -19,9 +20,19 @@ export class ReportGenerator {
   ): Promise<string[]> {
     const generatedFiles: string[] = [];
 
+    // Validate output directory
+    const baseDir = projectRoot || process.cwd();
+    let safeOutputDir: string;
+    
+    try {
+      safeOutputDir = validatePath(outputDir, baseDir);
+    } catch (error: any) {
+      throw new Error(`Invalid output directory: ${error.message}`);
+    }
+
     // Ensure output directory exists
-    if (!existsSync(outputDir)) {
-      mkdirSync(outputDir, { recursive: true });
+    if (!existsSync(safeOutputDir)) {
+      mkdirSync(safeOutputDir, { recursive: true });
     }
 
     // Generate sanitized filename
@@ -44,7 +55,7 @@ export class ReportGenerator {
             extension = 'md';
             break;
           case 'html':
-            content = ReportGenerator.generateHTML(report, outputDir, projectRoot);
+            content = ReportGenerator.generateHTML(report, safeOutputDir, projectRoot);
             extension = 'html';
             break;
           case 'json':
@@ -55,7 +66,7 @@ export class ReportGenerator {
             continue;
         }
 
-        const filepath = join(outputDir, `${baseFilename}.${extension}`);
+        const filepath = join(safeOutputDir, `${baseFilename}.${extension}`);
         writeFileSync(filepath, content, 'utf-8');
         generatedFiles.push(filepath);
       } catch (error) {

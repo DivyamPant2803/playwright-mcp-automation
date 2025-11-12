@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+/**
+ * SECURITY NOTE: The command in execSync must NEVER be parameterized.
+ * If dynamic commands are needed, use spawn() with proper validation.
+ */
+
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -9,11 +14,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageRoot = join(__dirname, '..');
 
+// Hardcoded command - must never be modified or parameterized
+const COMMAND = 'npm pack --dry-run --json';
+
+// Validate command is not modified
+if (COMMAND !== 'npm pack --dry-run --json') {
+  throw new Error('Command validation failed: command must not be modified');
+}
+
 try {
   // Get package size
-  const result = execSync('npm pack --dry-run --json', {
+  const result = execSync(COMMAND, {
     cwd: packageRoot,
-    encoding: 'utf-8'
+    encoding: 'utf-8',
+    maxBuffer: 10 * 1024 * 1024, // 10MB max buffer
   });
   
   const packInfo = JSON.parse(result);

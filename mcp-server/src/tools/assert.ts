@@ -1,6 +1,7 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
-import { validateSelector, validateTimeout } from '../utils/input-validator.js';
+import { validateSelector, validateTimeout, validateTextInput, validateUrlPattern } from '../utils/input-validator.js';
+import { getSafeErrorMessage } from '../utils/error-sanitizer.js';
 
 export const assertTool: PlaywrightTool = {
   name: 'playwright_assert',
@@ -41,8 +42,8 @@ export const assertTool: PlaywrightTool = {
     // Validate inputs
     const type = args.type;
     const selector = args.selector ? validateSelector(args.selector) : undefined;
-    const expectedText = args.expectedText;
-    const expectedUrl = args.expectedUrl;
+    const expectedText = args.expectedText ? validateTextInput(args.expectedText, 10000, 'expectedText') : undefined;
+    const expectedUrl = args.expectedUrl ? validateUrlPattern(args.expectedUrl) : undefined;
     const expectedCount = args.expectedCount;
     const timeout = validateTimeout(args.timeout ?? 5000);
     const page = await manager.getPage();
@@ -137,14 +138,10 @@ export const assertTool: PlaywrightTool = {
     } catch (error: any) {
       const page = await manager.getPage().catch(() => null);
       const errorDetails: any = {
-        message: error.message,
-        stack: error.stack,
-        type: error.name || 'Error',
+        message: getSafeErrorMessage(error),
+        type: error?.name || 'Error',
         assertionType: args.type,
         selector: args.selector,
-        expectedText: args.expectedText,
-        expectedUrl: args.expectedUrl,
-        expectedCount: args.expectedCount,
         timestamp: new Date().toISOString(),
       };
       
@@ -162,7 +159,7 @@ export const assertTool: PlaywrightTool = {
           {
             type: 'text',
             text: JSON.stringify({
-              error: `Assertion failed: ${error.message}`,
+              error: `Assertion failed: ${getSafeErrorMessage(error)}`,
               details: errorDetails,
             }, null, 2),
           },

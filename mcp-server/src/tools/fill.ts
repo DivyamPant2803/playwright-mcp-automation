@@ -1,6 +1,7 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
 import { validateSelector, validateTimeout, validateFillValue } from '../utils/input-validator.js';
+import { getSafeErrorMessage } from '../utils/error-sanitizer.js';
 
 export const fillTool: PlaywrightTool = {
   name: 'playwright_fill',
@@ -52,11 +53,9 @@ export const fillTool: PlaywrightTool = {
     } catch (error: any) {
       const page = await manager.getPage().catch(() => null);
       const errorDetails: any = {
-        message: error.message,
-        stack: error.stack,
-        type: error.name || 'Error',
+        message: getSafeErrorMessage(error),
+        type: error?.name || 'Error',
         selector: args.selector,
-        value: args.value,
         timestamp: new Date().toISOString(),
       };
       
@@ -74,7 +73,7 @@ export const fillTool: PlaywrightTool = {
           {
             type: 'text',
             text: JSON.stringify({
-              error: `Failed to fill element: ${error.message}`,
+              error: `Failed to fill element: ${getSafeErrorMessage(error)}`,
               details: errorDetails,
             }, null, 2),
           },

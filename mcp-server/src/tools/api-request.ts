@@ -1,5 +1,6 @@
 import { ApiRequestTool } from '../types.js';
 import { validateUrl } from '../utils/url-validator.js';
+import { validateHeaders } from '../utils/header-validator.js';
 
 export const apiRequestTool: ApiRequestTool = {
   name: 'playwright_api_request',
@@ -50,12 +51,34 @@ export const apiRequestTool: ApiRequestTool = {
       };
     }
     
+    // Validate headers to prevent header injection
+    let validatedHeaders: Record<string, string>;
+    try {
+      validatedHeaders = validateHeaders(headers);
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Header validation failed: ${error.message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+    
+    // Set up timeout
+    const timeoutMs = parseInt(process.env.API_REQUEST_TIMEOUT || '30000', 10);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
     const fetchOptions: RequestInit = {
       method,
       headers: {
         'Content-Type': 'application/json',
-        ...headers,
+        ...validatedHeaders,
       },
+      signal: controller.signal,
     };
     
     if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
@@ -64,12 +87,27 @@ export const apiRequestTool: ApiRequestTool = {
     
     try {
       const response = await fetch(validatedUrl.toString(), fetchOptions);
+      clearTimeout(timeoutId);
       const responseText = await response.text();
+      
+      // Validate Content-Type
+      const contentType = response.headers.get('content-type') || '';
+      const isJson = contentType.includes('application/json') || 
+                     contentType.includes('application/vnd.api+json');
+      
       let responseData;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch {
-        responseData = responseText;
+      if (isJson) {
+        try {
+          responseData = JSON.parse(responseText);
+        } catch {
+          // If Content-Type says JSON but parsing fails, return text
+          responseData = responseText;
+        }
+      } else {
+        // For non-JSON, return text (truncated if too long)
+        responseData = responseText.length > 10000 
+          ? responseText.substring(0, 10000) + '... (truncated)'
+          : responseText;
       }
       
       return {
@@ -80,15 +118,33 @@ export const apiRequestTool: ApiRequestTool = {
               status: response.status,
               statusText: response.statusText,
               headers: Object.fromEntries(response.headers.entries()),
+              contentType: contentType,
               data: responseData,
             }, null, 2),
           },
         ],
       };
     } catch (error: any) {
+      clearTimeout(timeoutId);
+      
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                error: `API request timed out after ${timeoutMs}ms`,
+              }, null, 2),
+            },
+          ],
+          isError: true,
+        };
+      }
+      
       const errorDetails = {
         message: error.message,
-        stack: error.stack,
+        // Don't expose stack trace in production
         type: error.name || 'Error',
         url: validatedUrl.toString(),
         method,

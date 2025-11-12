@@ -1,6 +1,7 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
 import { validateSelector, validateTimeout } from '../utils/input-validator.js';
+import { getSafeErrorMessage } from '../utils/error-sanitizer.js';
 
 export const clickTool: PlaywrightTool = {
   name: 'playwright_click',
@@ -48,9 +49,8 @@ export const clickTool: PlaywrightTool = {
     } catch (error: any) {
       const page = await manager.getPage().catch(() => null);
       const errorDetails: any = {
-        message: error.message,
-        stack: error.stack,
-        type: error.name || 'Error',
+        message: getSafeErrorMessage(error),
+        type: error?.name || 'Error',
         selector: args.selector,
         timestamp: new Date().toISOString(),
       };
@@ -70,7 +70,7 @@ export const clickTool: PlaywrightTool = {
           {
             type: 'text',
             text: JSON.stringify({
-              error: `Failed to click element: ${error.message}`,
+              error: `Failed to click element: ${getSafeErrorMessage(error)}`,
               details: errorDetails,
             }, null, 2),
           },

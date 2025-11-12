@@ -11,6 +11,34 @@ import { platform, release } from 'os';
 import { existsSync } from 'fs';
 import { resolve, relative } from 'path';
 
+/**
+ * Sanitize URL for reporting (remove sensitive parts)
+ */
+function sanitizeUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  
+  try {
+    const urlObj = new URL(url);
+    // Remove username/password if present
+    if (urlObj.username || urlObj.password) {
+      urlObj.username = '';
+      urlObj.password = '';
+    }
+    // Mask query parameters that might contain secrets
+    if (urlObj.searchParams.has('token') || urlObj.searchParams.has('key') || urlObj.searchParams.has('secret') || urlObj.searchParams.has('api_key') || urlObj.searchParams.has('api-key')) {
+      urlObj.searchParams.set('token', '***');
+      urlObj.searchParams.set('key', '***');
+      urlObj.searchParams.set('secret', '***');
+      urlObj.searchParams.set('api_key', '***');
+      urlObj.searchParams.set('api-key', '***');
+    }
+    return urlObj.toString();
+  } catch {
+    // If URL parsing fails, return masked version
+    return url.replace(/[?&](token|key|secret|password|api[_-]?key)=[^&]*/gi, '$1=***');
+  }
+}
+
 class ErrorReporter implements Reporter {
   private errorConfig: ErrorConfig;
 
@@ -70,8 +98,8 @@ class ErrorReporter implements Reporter {
           browser: (test as any).project?.use?.browserName || 'unknown',
           os: `${platform()} ${release()}`,
           testEnv: process.env.TEST_ENV || process.env.NODE_ENV || 'development',
-          apiUrl: process.env.API_URL || undefined,
-          uiUrl: process.env.UI_URL || undefined,
+          apiUrl: sanitizeUrl(process.env.API_URL),
+          uiUrl: sanitizeUrl(process.env.UI_URL),
         },
         {
           screenshots: this.getAttachmentPaths(result.attachments, 'screenshot', projectRoot),

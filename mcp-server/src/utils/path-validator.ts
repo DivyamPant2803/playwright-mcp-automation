@@ -64,4 +64,3 @@ export function validateDirectoryPath(dirPath: string, baseDir: string): string 
   return validatePath(dirPath, baseDir);
 }
 
-

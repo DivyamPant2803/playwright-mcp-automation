@@ -27,7 +27,9 @@
     "build:mcp": "cd mcp-server && npm run build",
     "build:cli": "node scripts/build-cli.js",
     "prepublishOnly": "npm run build && npm run size-check",
-    "size-check": "node scripts/check-size.js"
+    "size-check": "node scripts/check-size.js",
+    "test:security": "node scripts/test-security-fixes.js",
+    "test": "playwright test"
   },
   "keywords": [
     "playwright",

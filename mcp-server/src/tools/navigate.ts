@@ -1,6 +1,7 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
 import { validateNavigationUrl } from '../utils/url-validator.js';
+import { getSafeErrorMessage } from '../utils/error-sanitizer.js';
 
 export const navigateTool: PlaywrightTool = {
   name: 'playwright_navigate',
@@ -55,9 +56,8 @@ export const navigateTool: PlaywrightTool = {
     };
     } catch (error: any) {
       const errorDetails = {
-        message: error.message,
-        stack: error.stack,
-        type: error.name || 'Error',
+        message: getSafeErrorMessage(error),
+        type: error?.name || 'Error',
         url: validatedUrl.toString(),
         waitUntil,
         timestamp: new Date().toISOString(),
@@ -68,7 +68,7 @@ export const navigateTool: PlaywrightTool = {
           {
             type: 'text',
             text: JSON.stringify({
-              error: `Navigation failed: ${error.message}`,
+              error: `Navigation failed: ${getSafeErrorMessage(error)}`,
               details: errorDetails,
             }, null, 2),
           },

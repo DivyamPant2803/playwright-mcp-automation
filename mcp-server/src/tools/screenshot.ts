@@ -1,7 +1,8 @@
 import { PlaywrightManager } from '../playwright-manager.js';
 import { PlaywrightTool } from '../types.js';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { writeFileSync, existsSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { validatePath } from '../utils/path-validator.js';
 
 export const screenshotTool: PlaywrightTool = {
   name: 'playwright_screenshot',
@@ -37,15 +38,47 @@ export const screenshotTool: PlaywrightTool = {
     }
     
     if (path) {
-      writeFileSync(path, buffer);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Screenshot saved to ${path}`,
-          },
-        ],
-      };
+      try {
+        // Get project root or use configured output directory
+        const projectRoot = process.cwd();
+        const outputDir = process.env.SCREENSHOT_OUTPUT_DIR || join(projectRoot, 'test-results', 'screenshots');
+        
+        // Ensure output directory exists
+        if (!existsSync(outputDir)) {
+          mkdirSync(outputDir, { recursive: true });
+        }
+        
+        // Validate path is within output directory
+        const safePath = validatePath(path, outputDir);
+        
+        // Ensure directory exists
+        const dir = dirname(safePath);
+        if (!existsSync(dir)) {
+          mkdirSync(dir, { recursive: true });
+        }
+        
+        writeFileSync(safePath, buffer);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Screenshot saved to ${safePath}`,
+            },
+          ],
+        };
+      } catch (error: any) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                error: `Failed to save screenshot: ${error.message}`,
+              }, null, 2),
+            },
+          ],
+          isError: true,
+        };
+      }
     } else {
       return {
         content: [
